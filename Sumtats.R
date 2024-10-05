@@ -11,11 +11,23 @@ Data3 <- Data3 %>% mutate(City = ifelse(City == "VANTAA", "Vantaa", City))
 
 Data <- rbind(Data1, Data2, Data3)
 
+#############################################################
+
+Data <- read.xlsx("Utdata/All_data_Huvudstadsreg_o_periferi_9.9.2024.xlsx")
+
+Data_alla <- Data 
+
+Data <- subset(Data_alla, Type == "Rivitalo")
+Data <- subset(Data_alla, Type == "Kerrostalo")
+
+Data <- subset(Data, Price != "Kysy hintaa")
+
 
 # Remove rows where Price is NA (which were non-numeric originally)
 Data <- Data[!is.na(Data$Price), ]
 # First, convert the Price column to numeric, coercing non-numeric values to NA
 Data$Price <- as.numeric(as.character(Data$Price))
+
 Data <- Data[!is.na(Data$Price), ]
 
 Data$Size <- gsub(",", ".", Data$Size)
@@ -53,18 +65,19 @@ Helsingfors <- subset(Data, City == "Helsinki")
 ##Storleksfordelning 
 hist(Helsingfors$Size)
 
+
 Pris_per_omrode_helsingfors <- Helsingfors %>%
   group_by(Area) %>%
-  summarise(Snitt_pris = mean(Price))
+  summarise(median_pris = median(Price))
 
 
 KM2_per_omrode_helsingfors <- Helsingfors %>%
   group_by(Area) %>%
-  summarise(Snitt_km2 = mean(Size))
+  summarise(Snitt_km2 = median(Size))
 
 Pris_per_KM2_per_omrode_helsingfors <- Helsingfors %>%
   group_by(Area) %>%
-  summarise(Snitt_Pris_per_km2 = mean(Pris_per_km2))
+  summarise(median_Pris_per_km2 = median(Pris_per_km2))
 
 
 Antal <- Helsingfors %>%
