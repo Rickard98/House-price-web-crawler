@@ -13,9 +13,8 @@ Data <- rbind(Data1, Data2, Data3)
 
 #############################################################
 
-Data <- read.xlsx("Utdata/All_data_Huvudstadsreg_o_periferi_9.9.2024.xlsx")
+Data_alla <- read.xlsx("Utdata/All_data_Huvudstadsreg_o_periferi_9.9.2024.xlsx")
 
-Data_alla <- Data 
 
 Data <- subset(Data_alla, Type == "Rivitalo")
 Data <- subset(Data_alla, Type == "Kerrostalo")
