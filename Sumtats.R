@@ -11,13 +11,13 @@ Data3 <- Data3 %>% mutate(City = ifelse(City == "VANTAA", "Vantaa", City))
 
 Data <- rbind(Data1, Data2, Data3)
 
-#############################################################
+############################################################# Sipoo
 
-Data_alla <- read.xlsx("Utdata/All_data_Huvudstadsreg_o_periferi_9.9.2024.xlsx")
+Data_alla <- read.xlsx("Utdata/All_data_Huvudstadsreg_o_periferi.14.12.2024.xlsx")
 
 
 Data <- subset(Data_alla, Type == "Rivitalo")
-Data <- subset(Data_alla, Type == "Kerrostalo")
+#Data <- subset(Data_alla, Type == "Kerrostalo")
 
 Data <- subset(Data, Price != "Kysy hintaa")
 
@@ -26,6 +26,8 @@ Data <- subset(Data, Price != "Kysy hintaa")
 Data <- Data[!is.na(Data$Price), ]
 # First, convert the Price column to numeric, coercing non-numeric values to NA
 Data$Price <- as.numeric(as.character(Data$Price))
+Data$Price <- as.numeric(Data$Price)
+
 
 Data <- Data[!is.na(Data$Price), ]
 
@@ -57,9 +59,11 @@ Snitt_pris_per_km2_per_område <- Data %>%
 
 #################
 ###Helsingfors
-#################
+################# Sipoo
 
-Helsingfors <- subset(Data, City == "Helsinki")
+Helsingfors <- subset(Data, City == "Helsinki" | City == "Espoo")
+Helsingfors <- subset(Data, City == "Sipoo")
+
 
 ##Storleksfordelning 
 hist(Helsingfors$Size)
@@ -100,7 +104,7 @@ Helsingfors$pris_varde_km2 <- Helsingfors$Pris_per_km2 - Helsingfors$Snitt_Pris_
 
 
 Helsingfors <- Helsingfors %>%
-  mutate(Vart_intervall = ifelse(Price >= 200000 & Price <= 350000 & Size >=73 & Size <= 95, 1, 0))
+  mutate(Vart_intervall = ifelse(Price >= 250000 & Price <= 300000 & Size >=73 & Size <= 95, 1, 0))
 
 Inom_vort_intervall_Helsingfors <- subset(Helsingfors, Vart_intervall == 1)
 
