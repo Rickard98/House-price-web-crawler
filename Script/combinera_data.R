@@ -53,4 +53,45 @@ All_data$pris_per_kvad <- All_data$Price / All_data$Size
 write.xlsx(All_data, "Utdata/ALL_data.xlsx")
 
 
+#############################################################
+
 test <- read.xlsx("Utdata/ALL_data.xlsx")
+
+test <- subset(test,Type == "Rivitalo")
+
+
+Pris_per_omrode_helsingfors <- test %>%
+  group_by(Area) %>%
+  summarise(median_pris = median(Price))
+
+KM2_per_omrode_helsingfors <- test %>%
+  group_by(Area) %>%
+  summarise(Snitt_km2 = median(Size))
+
+
+Pris_per_KM2_per_omrode_helsingfors <- test %>%
+  group_by(Area) %>%
+  summarise(median_Pris_per_km2 = median(pris_per_kvad))
+
+
+Antal <- test %>%
+  group_by(Area) %>%
+  summarise(Antal = sum(n()) )
+
+Snitt_alder <- test %>%
+  group_by(Area) %>%
+  summarise(Snitt_alder =  median(Year))
+
+Snitt_alder$Snitt_alder <- round(Snitt_alder$Snitt_alder)
+
+
+Totlat_sumstat_per_område <- merge(Pris_per_omrode_helsingfors, KM2_per_omrode_helsingfors, by = "Area", all.x = T)
+Totlat_sumstat_per_område <- merge(Totlat_sumstat_per_område, Antal, by = "Area", all.x = T)
+Totlat_sumstat_per_område <- merge(Totlat_sumstat_per_område, Pris_per_KM2_per_omrode_helsingfors, by = "Area", all.x = T)
+Totlat_sumstat_per_område <- merge(Totlat_sumstat_per_område, Snitt_alder, by = "Area", all.x = T)
+
+test2 <- merge(test, Totlat_sumstat_per_område, by = "Area", all.x = T)
+
+
+test2$pris_varde <- test2$Price - test2$Pris_per_omrode_helsingfors
+test2$pris_varde_km2 <- test2$Pris_per_km2 - test2$Snitt_Pris_per_km2
