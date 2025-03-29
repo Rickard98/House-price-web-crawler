@@ -3,6 +3,17 @@ library(pacman)
 p_load("dplyr", "readxl", "openxlsx", "stringr", "tidyr", "pbapply", "writexl", "openxlsx")
 
 
+df_Feb <- read.xlsx("Utdata/All_data_Huvudstadsreg_o_periferi.20.02.2025.xlsx") 
+df_Feb$Price <- as.numeric(df_Feb$Price)
+df_Feb <- select(df_Feb, -Other)
+df_Feb$Hämtat <-  as.Date("2025-02-20", format = "%Y-%m-%d")
+
+df_Januari <- read.xlsx("Utdata/All_data_Huvudstadsreg_o_periferi.19.01.2025.xlsx") 
+df_Januari$Price <- as.numeric(df_Januari$Price)
+df_Januari <- select(df_Januari, -Random, -Other)
+df_Januari$Hämtat <-  as.Date("2025-01-19", format = "%Y-%m-%d")
+
+
 df_December <- read.xlsx("Utdata/All_data_Huvudstadsreg_o_periferi.14.12.2024.xlsx") 
 df_December$Price <- as.numeric(df_December$Price)
 df_December <- select(df_December, -Random, -Other)
@@ -22,15 +33,16 @@ df_September <- read.xlsx("Utdata/All_data_Huvudstadsreg_o_periferi_9.9.2024.xls
 df_September$Price <- as.numeric(df_September$Price)
 df_September$Hämtat <-  as.Date("2024-09-09", format = "%Y-%m-%d")
 
+All_data <- read_xlsx("Utdata/ALL_data_2024.xlsx")
+All_data <- select(All_data, -pris_per_kvad, -House_ID)
+
+All_data <- rbind(All_data, df_Januari, df_Feb)
 
 
-All_data <- rbind(df_December, df_Nowember, df_Oktober, df_September)
 
 All_data <- All_data %>%
   mutate(House_ID = paste(Street.Address, Area, City, Size, Year, sep = "_")) %>%
   mutate(House_ID = as.factor(House_ID))
-
-
 
 All_data$Price <- as.numeric(All_data$Price)
 All_data$Year <- as.numeric(All_data$Year)
@@ -43,55 +55,39 @@ All_data$Size <- as.numeric(All_data$Size)
 
 All_data <- subset(All_data, Size <= 500 & Size >= 10)
 All_data <- subset(All_data, Price > 100000)
-All_data <- All_data %>% distinct(House_ID, .keep_all = T)
+
 
 
 hist(All_data$Size)
 
 All_data$pris_per_kvad <- All_data$Price / All_data$Size
 
-write.xlsx(All_data, "Utdata/ALL_data.xlsx")
+#write.xlsx(All_data, "Utdata/ALL_data_panel_data.xlsx")
 
+All_data <- All_data %>% distinct(House_ID, .keep_all = T)
 
 #############################################################
+### Analys 
+#############################################################
+All_data <- subset(All_data,Type == "Rivitalo")
+All_data <- All_data %>% distinct(House_ID, .keep_all = T)
 
-test <- read.xlsx("Utdata/ALL_data.xlsx")
-
-test <- subset(test,Type == "Rivitalo")
-
-
-Pris_per_omrode_helsingfors <- test %>%
-  group_by(Area) %>%
-  summarise(median_pris = median(Price))
-
-KM2_per_omrode_helsingfors <- test %>%
-  group_by(Area) %>%
-  summarise(Snitt_km2 = median(Size))
+Pris_utveck <- All_data %>%
+  group_by(Hämtat) %>%
+  summarise(Pris_utveck = median(Price))
 
 
-Pris_per_KM2_per_omrode_helsingfors <- test %>%
-  group_by(Area) %>%
-  summarise(median_Pris_per_km2 = median(pris_per_kvad))
+pris_per_kvad_utveck <- All_data %>%
+  group_by(Hämtat) %>%
+  summarise(pris_per_kvad_utveck = mean(pris_per_kvad))
+
+Size_utveck <- All_data %>%
+  group_by(Hämtat) %>%
+  summarise(Size_utveck = mean(Size))
+
+Mängd <- All_data %>%
+  group_by(Hämtat) %>%
+  summarise(Antal = n())
+#############################################################
 
 
-Antal <- test %>%
-  group_by(Area) %>%
-  summarise(Antal = sum(n()) )
-
-Snitt_alder <- test %>%
-  group_by(Area) %>%
-  summarise(Snitt_alder =  median(Year))
-
-Snitt_alder$Snitt_alder <- round(Snitt_alder$Snitt_alder)
-
-
-Totlat_sumstat_per_område <- merge(Pris_per_omrode_helsingfors, KM2_per_omrode_helsingfors, by = "Area", all.x = T)
-Totlat_sumstat_per_område <- merge(Totlat_sumstat_per_område, Antal, by = "Area", all.x = T)
-Totlat_sumstat_per_område <- merge(Totlat_sumstat_per_område, Pris_per_KM2_per_omrode_helsingfors, by = "Area", all.x = T)
-Totlat_sumstat_per_område <- merge(Totlat_sumstat_per_område, Snitt_alder, by = "Area", all.x = T)
-
-test2 <- merge(test, Totlat_sumstat_per_område, by = "Area", all.x = T)
-
-
-test2$pris_varde <- test2$Price - test2$Pris_per_omrode_helsingfors
-test2$pris_varde_km2 <- test2$Pris_per_km2 - test2$Snitt_Pris_per_km2
